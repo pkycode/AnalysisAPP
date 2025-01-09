@@ -84,7 +84,7 @@ def main():
             st.dataframe(df.head())
             
             # Initialize LLM
-            llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125", api_key=OPENAI_API_KEY)
+            llm = ChatOpenAI(temperature=0, model="gpt-4", api_key=OPENAI_API_KEY)
             
             # Create pandas agent with strict output formatting
             agent = create_agent_with_strict_output(llm, df)
