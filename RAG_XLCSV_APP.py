@@ -5,8 +5,6 @@ import os
 import re
 from langchain_openai import ChatOpenAI
 from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.agents.agent import AgentExecutor
-from langchain.agents.agent_types import AgentType
 import xlrd
 import openpyxl
 
@@ -30,8 +28,8 @@ def load_file(uploaded_file):
     else:
         raise ValueError("Unsupported file format")
 
-def create_agent_with_error_handling(llm, df):
-    """Create pandas agent with error handling and proper output formatting"""
+def create_agent(llm, df):
+    """Create pandas agent with proper output formatting"""
     prefix = """You are a helpful and friendly data analysis expert. When analyzing data:
     1. Start with a brief explanation of your findings
     2. Present numerical results clearly with proper formatting:
@@ -50,30 +48,15 @@ def create_agent_with_error_handling(llm, df):
     • Lowest Sale: $12,345.67
     """
 
-    # Create the agent with error handling
-    agent = create_pandas_dataframe_agent(
+    return create_pandas_dataframe_agent(
         llm,
         df,
-        agent_type=AgentType.OPENAI_FUNCTIONS,
         verbose=True,
         handle_parsing_errors=True,
         max_iterations=5,
-        max_execution_time=60,
         allow_dangerous_code=True,
         prefix=prefix
     )
-    
-    # Wrap with AgentExecutor for better error handling
-    executor = AgentExecutor.from_agent_and_tools(
-        agent=agent,
-        tools=agent.tools,
-        verbose=True,
-        handle_parsing_errors=True,
-        max_iterations=5,
-        early_stopping_method="force",
-    )
-    
-    return executor
 
 def main():
     st.title("Excel/CSV Question Answering System")
@@ -100,8 +83,8 @@ def main():
                 api_key=OPENAI_API_KEY
             )
             
-            # Create agent with error handling
-            agent = create_agent_with_error_handling(llm, df)
+            # Create agent
+            agent = create_agent(llm, df)
             
             # Query input
             query = st.text_input("Ask a question about your data:")
@@ -119,7 +102,7 @@ def main():
                         
                         response = agent.run(formatted_query)
                         
-                        # Clean up the response but preserve the explanation
+                        # Display the response
                         if response:
                             response = response.replace("Here's what I found:", "").strip()
                             response = response.replace("Analysis Result:", "").strip()
@@ -128,9 +111,7 @@ def main():
                 except Exception as e:
                     error_msg = str(e)
                     if "parsing errors" in error_msg.lower():
-                        # Handle parsing errors gracefully
                         try:
-                            # Try to extract the actual response from the error message
                             match = re.search(r'Could not parse LLM output: `(.*?)`', error_msg)
                             if match:
                                 actual_response = match.group(1)
