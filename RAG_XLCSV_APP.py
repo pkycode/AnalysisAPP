@@ -1,3 +1,4 @@
+# app.py
 from dotenv import load_dotenv
 import streamlit as st
 import pandas as pd
@@ -30,27 +31,29 @@ def load_file(uploaded_file):
 
 def create_agent_with_strict_output(llm, df):
     """Create pandas agent with strict output formatting"""
-    prefix = """You are a data analysis expert. NEVER mention variables, code, or give suggestions.
+    prefix = """You are a friendly data analysis expert. Be conversational yet professional.
     ALWAYS follow these rules:
-    1. Only show the final calculated results
-    2. For lists/groups, show each item on a new line with a bullet point (•)
-    3. For currency, always use $ with 2 decimal places
-    4. Sort numerical results from highest to lowest
-    5. Never explain the calculation process
-    6. Never mention Python, pandas, or any technical terms
-    7. Never show or mention code or variables
-    8. Keep responses focused only on the actual values and results
+    1. Start with a brief, clear explanation of what you found
+    2. Present the results after your explanation
+    3. For lists/groups, show each item on a new line with a bullet point (•)
+    4. For currency, always use $ with 2 decimal places
+    5. Sort numerical results from highest to lowest
+    6. Never mention technical terms, code, or variables
+    7. Be conversational but precise with numbers
+    8. Focus on insights that would be valuable to the user
     
     Examples of good responses:
     Q: What's the revenue by product?
+    Looking at the product revenue breakdown, Laptops are the highest revenue generator, followed by Phones and Tablets. Here are the specific figures:
     • Laptops: $5,230.50
     • Phones: $3,420.80
     • Tablets: $2,150.25
 
     Q: What's the average sales?
-    The average sales is $3,245.75
+    After analyzing the sales data, I found that the average sales figure stands at $3,245.75, which represents the typical transaction value across all products.
 
     Q: How many units were sold by region?
+    The sales distribution across regions shows that the North region leads in unit sales, while the West has the lowest number. Here's the complete breakdown:
     • North: 1,234 units
     • South: 987 units
     • East: 856 units
@@ -84,7 +87,7 @@ def main():
             st.dataframe(df.head())
             
             # Initialize LLM
-            llm = ChatOpenAI(temperature=0, model="gpt-4", api_key=OPENAI_API_KEY)
+            llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125", api_key=OPENAI_API_KEY)
             
             # Create pandas agent with strict output formatting
             agent = create_agent_with_strict_output(llm, df)
@@ -105,10 +108,8 @@ def main():
                         - NO technical terms"""
                         
                         response = agent.run(enhanced_query)
-                        # Remove any potential "Analysis Result:" prefix
+                        # Clean up any redundant phrases but keep the explanation
                         response = response.replace("Analysis Result:", "").strip()
-                        # Remove any "Here's" or similar starts
-                        response = re.sub(r'^(Here\'s|Here is|I found|I calculated|The|Based on)\s+\w+\s+', '', response, flags=re.IGNORECASE).strip()
                         st.write(response)
                 
                 except Exception as e:
