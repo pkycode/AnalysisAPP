@@ -78,10 +78,6 @@ Feel free to submit issues, fork the repository, and create pull requests for an
 
 This application uses OpenAI's API for processing queries. Ensure you handle your API keys securely and review any sensitive data before uploading.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 
 - OpenAI for providing the GPT API
